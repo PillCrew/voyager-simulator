@@ -1,0 +1,933 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Traversing the cosmos in virtual reality - Voyager VR Space Adventure">
+  <meta name="theme-color" content="#000000">
+  <title>Voyager VR - Deep Space Expedition</title>
+  <script src="js/voyager/debug.js"></script>
+  <script src="js/aframe.min.js"></script>
+  <script src="js/star-system.js"></script>
+  <script src="https://static.heyvr.io/sdk/ads/sdk-aframe.js"></script>
+  <script src="https://static.heyvr.io/sdk/ads/sdk-web.js"></script>
+  <script src="js/app/file-protocol-guard.js"></script>
+  <script src="js/voyager/components/ui-restart.js"></script>
+  <script src="js/voyager/components/ui-leaderboard.js"></script>
+  <script src="js/voyager/components/game-manager.js"></script>
+  <script src="js/voyager/components/input-fuse.js"></script>
+  <script src="js/voyager/components/input-controller.js"></script>
+  <script src="js/voyager/components/world.js"></script>
+  <script src="js/voyager/components/scanner.js"></script>
+  <script src="js/voyager/components/weapon-system.js"></script>
+  <script src="js/voyager/components/weapons-effects.js"></script>
+  <script src="js/voyager/components/performance.js"></script>
+  <script src="js/app/menu-ui.js" defer></script>
+</head>
+<body>
+  <style>
+    #enter-ar-btn {
+      background: rgba(0, 0, 0, 0.35);
+      border: 0;
+      color: #fff;
+      padding: 8px 12px;
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      text-transform: uppercase;
+      transition: background-color 0.05s ease;
+      user-select: none;
+      outline: none;
+    }
+    #enter-ar-btn:hover {
+      background-color: #ef2d5e;
+    }
+    #enter-ar-btn:active {
+      background-color: #ef2d5e;
+    }
+  </style>
+  <div id="ar-button-container" style="display: none; position: fixed; bottom: 20px; right: 100px; z-index: 99999;">
+    <button id="enter-ar-btn">ENTER AR</button>
+  </div>
+  <a-scene background="color: #000000"
+           renderer="alpha: true; antialias: false; colorManagement: true; physicallyCorrectLights: true"
+           vr-mode-ui="enabled: true"
+           webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor, layers, dom-overlay, hit-test"
+           game-manager vr-performance="questFramebufferScaleFactor: 1.0; questFoveation: 0"
+           animation="property: background.color; from: #000000; to: #080810; dur: 300000; dir: alternate; loop: true; easing: easeInOutSine">
+    <a-assets>
+      <audio id="shot-audio-photon" src="assets/sounds/shot5.mp3" preload="auto"></audio>
+    <audio id="shot-audio-omega" src="assets/sounds/shot6.mp3" preload="auto"></audio>
+    <audio id="shot-audio-solar" src="assets/sounds/shot7.mp3" preload="auto"></audio>
+    <audio id="shot-audio-void" src="assets/sounds/shot8.mp3" preload="auto"></audio>
+    <audio id="mission-audio-1" src="assets/sounds/misja.mp3" preload="auto"></audio>
+    <audio id="mission-audio-2" src="assets/sounds/misja2.mp3" preload="auto"></audio>
+    <audio id="mission-audio-3" src="assets/sounds/misja3.mp3" preload="auto"></audio>
+    <audio id="mission-audio-4" src="assets/sounds/misja4.mp3" preload="auto"></audio>
+    <audio id="mission-audio-5" src="assets/sounds/misja5.mp3" preload="auto"></audio>
+    <audio id="mission-audio-6" src="assets/sounds/misja6.mp3" preload="auto"></audio>
+    <audio id="mission-audio-61" src="assets/sounds/misja61.mp3" preload="auto"></audio>
+    <audio id="mission-audio-7" src="assets/sounds/misja7.mp3" preload="auto"></audio>
+    <audio id="mission-audio-8" src="assets/sounds/misja8.mp3" preload="auto"></audio>
+  </a-assets>
+        <a-sky id="main-skybox" src="assets/images/skybox_2k.jpg?v=cachebust1" rotation="0 -90 0" radius="5000" visible="true"
+          skybox-rotator></a-sky>
+    <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
+    <a-entity background-stars></a-entity>
+    <a-entity supernovae></a-entity>
+    <a-entity id="stars" star-system="numStars: 100"></a-entity>
+    <a-entity planet-system></a-entity>
+    <a-entity asteroid-system></a-entity>
+    <a-entity space-junk-system></a-entity>
+    <a-entity cosmic-dust></a-entity>
+    <a-entity id="rig" position="0 0 0">
+      <a-entity id="player" position="0 1.6 0" vr-controller>
+        <a-camera look-controls="pointerLockEnabled: false; reverseMouseDrag: false; touchEnabled: false"
+                  wasd-controls="enabled: false"
+                  planet-detector scanner laser-shooter
+                  near="0.1" far="10000"
+                  fov="80">
+        <a-entity speed-lines></a-entity>
+        <a-entity position="0 0 -1.5">
+          <a-ring radius-inner="0.028" radius-outer="0.035" color="#00ffff" opacity="0.8" material="shader: flat"></a-ring>
+          <a-ring radius-inner="0.010" radius-outer="0.014" color="#00ffff" opacity="0.6" material="shader: flat"></a-ring>
+          <a-circle radius="0.005" color="#00ffff" opacity="1" material="shader: flat"></a-circle>
+          <a-plane width="0.045" height="0.003" position="-0.040 0 0" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+          <a-plane width="0.045" height="0.003" position="0.040 0 0" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.045" position="0 -0.040 0" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.045" position="0 0.040 0" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+          <a-plane width="0.015" height="0.003" position="-0.055 0.025 0" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.015" height="0.003" position="0.055 0.025 0" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.015" height="0.003" position="-0.055 -0.025 0" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.015" height="0.003" position="0.055 -0.025 0" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+        </a-entity>
+        <a-entity id="scan-panel" position="0 0.15 -1" visible="false">
+          <a-plane width="0.36" height="0.096" color="#001122" opacity="0.4" material="shader: flat"></a-plane>
+          <a-plane width="0.36" height="0.002" position="0 0.048 0.001" color="#00ffff" material="shader: flat"></a-plane>
+          <a-plane width="0.36" height="0.002" position="0 -0.048 0.001" color="#00ffff" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.096" position="-0.18 0 0.001" color="#00ffff" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.096" position="0.18 0 0.001" color="#00ffff" material="shader: flat"></a-plane>
+          <a-text value="SCANNING ASTEROID" align="center" color="#00aaff" position="0 0.028 0.002" width="0.48"></a-text>
+          <a-text id="scan-text" value="PROGRESS: 0%" align="center" color="#00ffff" position="0 0 0.002" width="0.52"></a-text>
+          <a-plane width="0.288" height="0.01" position="0 -0.024 0.002" color="#003344" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane id="scan-progress-bar" width="0" height="0.01" position="-0.144 -0.024 0.003" color="#00ff88" material="shader: flat"></a-plane>
+        </a-entity>
+        <a-entity id="target-lock-panel" position="0 0.15 -1" visible="false">
+          <a-plane width="0.36" height="0.096" color="#220000" opacity="0.4" material="shader: flat"></a-plane>
+          <a-plane width="0.36" height="0.002" position="0 0.048 0.001" color="#ff0000" material="shader: flat"></a-plane>
+          <a-plane width="0.36" height="0.002" position="0 -0.048 0.001" color="#ff0000" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.096" position="-0.18 0 0.001" color="#ff0000" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.096" position="0.18 0 0.001" color="#ff0000" material="shader: flat"></a-plane>
+          <a-text value="TARGET LOCKED" align="center" color="#ff6600" position="0 0.028 0.002" width="0.48"></a-text>
+          <a-text id="lock-text" value="FIRING IN: 2.0s" align="center" color="#ff0000" position="0 0 0.002" width="0.52"></a-text>
+          <a-plane width="0.288" height="0.01" position="0 -0.024 0.002" color="#440000" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane id="lock-progress-bar" width="0" height="0.01" position="-0.144 -0.024 0.003" color="#ff0000" material="shader: flat"></a-plane>
+        </a-entity>
+        <a-entity id="too-far-panel" position="0 0.15 -1" visible="false">
+          <a-plane width="0.35" height="0.08" color="#442200" opacity="0.4" material="shader: flat"></a-plane>
+          <a-plane width="0.35" height="0.002" position="0 0.04 0.001" color="#ff9900" material="shader: flat"></a-plane>
+          <a-plane width="0.35" height="0.002" position="0 -0.04 0.001" color="#ff9900" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.08" position="-0.175 0 0.001" color="#ff9900" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.08" position="0.175 0 0.001" color="#ff9900" material="shader: flat"></a-plane>
+          <a-text value="TOO FAR" align="center" color="#ff9900" position="0 0.01 0.002" width="0.7"></a-text>
+          <a-text id="distance-text" value="DISTANCE: 0m" align="center" color="#ffaa44" position="0 -0.02 0.002" width="0.5"></a-text>
+        </a-entity>
+  <a-entity id="difficulty-panel" position="0 0.35 -1" visible="false">
+          <a-plane width="0.35" height="0.09" color="#440000" opacity="0.4" material="shader: flat"></a-plane>
+          <a-plane width="0.35" height="0.002" position="0 0.045 0.001" color="#ff3300" material="shader: flat"></a-plane>
+          <a-plane width="0.35" height="0.002" position="0 -0.045 0.001" color="#ff3300" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.09" position="-0.175 0 0.001" color="#ff3300" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.09" position="0.175 0 0.001" color="#ff3300" material="shader: flat"></a-plane>
+          <a-text value="!!! WARNING !!!" align="center" color="#ff0000" position="0 0.025 0.002" width="0.5"></a-text>
+          <a-text id="difficulty-text" value="DIFFICULTY UP! 3 JUNK MAX" align="center" color="#ff6600" position="0 -0.01 0.002" width="0.5"></a-text>
+        </a-entity>
+        <a-entity id="nasa-message-panel" position="0.35 -0.16 -1" visible="false">
+          <a-plane width="0.28" height="0.09" color="#001133" opacity="0.65" material="shader: flat"></a-plane>
+          <a-plane width="0.28" height="0.002" position="0 0.044 0.001" color="#00ff00" material="shader: flat"></a-plane>
+          <a-plane width="0.28" height="0.002" position="0 -0.044 0.001" color="#00ff00" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.09" position="-0.14 0 0.001" color="#00ff00" material="shader: flat"></a-plane>
+          <a-plane width="0.002" height="0.09" position="0.14 0 0.001" color="#00ff00" material="shader: flat"></a-plane>
+          <a-text id="scan-status" value="DATA OK" align="center" color="#00ff00" position="0 0.035 0.002" width="0.4" font-size="40"></a-text>
+          <a-text id="nasa-message" value="NASA" align="center" color="#00ff88" position="0 0.015 0.002" width="0.4" font-size="40"></a-text>
+          <a-text value="+3 PASSES" align="center" color="#ffdd00" position="0 -0.015 0.002" width="0.4" font-size="40"></a-text>
+        </a-entity>
+        <a-entity id="hud-left" position="-0.38 0.15 -1" speed-hud visible="false">
+          <a-plane width="0.32" height="0.003" position="0 0.14 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.32" height="0.003" position="0 -0.14 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.28" position="-0.16 0 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.28" position="0.16 0 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-text value="VOYAGER VR" align="center" color="#00ffff" position="0 0.09 0.002" width="0.75" font="roboto"></a-text>
+          <a-text value="VELOCITY" align="center" color="#00aaff" position="0 0.05 0.002" width="0.6"></a-text>
+          <a-text id="speed-value" value="12847 km/s" align="center" color="#00ff88" position="0 0.01 0.002" width="0.65"></a-text>
+          <a-text id="scan-counter" value="SCANS: 0" align="center" color="#ffdd00" position="0 -0.03 0.002" width="0.6"></a-text>
+          <a-text id="junk-counter" value="JUNK: 0" align="center" color="#ff6600" position="0 -0.07 0.002" width="0.6"></a-text>
+          <a-text id="escape-counter" value="PASSES: 0" align="center" color="#ff0000" position="0 -0.11 0.002" width="0.6"></a-text>
+        </a-entity>
+        <a-entity id="planet-name-hud" position="0 0.25 -1.5" visible="false">
+            <a-plane width="0.32" height="0.10" color="#1a1a33" opacity="0.85" material="shader: flat" position="0 0 0"></a-plane>
+            <a-plane width="0.32" height="0.002" position="0 0.05 0.001" color="#FFD700" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane width="0.32" height="0.002" position="0 -0.05 0.001" color="#FFD700" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane width="0.002" height="0.10" position="-0.16 0 0.001" color="#FFD700" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane width="0.002" height="0.10" position="0.16 0 0.001" color="#FFD700" opacity="0.9" material="shader: flat"></a-plane>
+            <a-text value="🪐 SCAN:" align="center" color="#FFD700" position="0 0.03 0.002" width="0.5" letter-spacing="2"></a-text>
+            <a-text id="planet-name-hud-text" value="EARTH" align="center" color="#FFFFFF" position="0 0.0 0.002" width="0.6" letter-spacing="1"></a-text>
+            <a-text id="planet-type-hud-text" value="TERRESTRIAL" align="center" color="#00FF88" position="0 -0.03 0.002" width="0.5"></a-text>
+        </a-entity>
+        <a-entity id="campaign-message-hud" position="0 -0.35 -1.5" visible="false" scale="1.2 1.2 1.2">
+            <a-plane id="camp-msg-bg" width="0.8" height="0.25" color="#000810" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane id="camp-msg-border-top" width="0.8" height="0.002" position="0 0.125 0.001" color="#00aaff" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane id="camp-msg-border-bottom" width="0.8" height="0.002" position="0 -0.125 0.001" color="#00aaff" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane id="camp-msg-border-left" width="0.002" height="0.25" position="-0.4 0 0.001" color="#00aaff" opacity="0.9" material="shader: flat"></a-plane>
+            <a-plane id="camp-msg-border-right" width="0.002" height="0.25" position="0.4 0 0.001" color="#00aaff" opacity="0.9" material="shader: flat"></a-plane>
+            <a-text id="camp-msg-header" value="MESSAGE 1 (INCOMING)" align="left" color="#ffdd00" position="-0.33 0.09 0.002" width="0.8" scale="0.8 0.8 0.8"></a-text>
+            <a-text id="camp-msg-priority" value="PRIORITY: ALPHA" align="right" color="#ff0000" position="0.33 0.09 0.002" width="0.8" scale="0.8 0.8 0.8"></a-text>
+            <a-text id="camp-msg-source" value="SOURCE: NASA DEEP SPACE NETWORK" align="left" color="#00aaff" position="-0.33 0.05 0.002" width="0.7" scale="0.6 0.6 0.6"></a-text>
+            <a-plane id="camp-msg-divider" width="0.66" height="0.001" position="0 0.03 0.001" color="#00aaff" opacity="0.5" material="shader: flat"></a-plane>
+            <a-text id="camp-msg-body" value="VOYAGER, INITIATE PROTOCOL 'PALE BLUE DOT'.\nRE-ORIENT ALL SENSORS. STANDING BY." align="center" color="#ffffff" position="0 -0.04 0.002" width="0.75" wrap-count="50"></a-text>
+            <a-plane id="camp-msg-progress-bg" width="0.6" height="0.01" position="0 -0.1 0.002" color="#333" visible="false"></a-plane>
+            <a-plane id="camp-msg-progress" width="0" height="0.01" position="-0.3 -0.1 0.003" pivot="0 0.5 0" color="#00ff00" visible="false"></a-plane>
+        </a-entity>
+        <a-entity id="hud-right" position="0.35 0.15 -1" visible="false">
+          <a-plane width="0.28" height="0.003" position="0 0.1 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.28" height="0.003" position="0 -0.1 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.2" position="-0.14 0 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-plane width="0.003" height="0.2" position="0.14 0 0.001" color="#00ffff" opacity="0.5" material="shader: flat"></a-plane>
+          <a-text value="SYSTEMS" align="center" color="#00ffff" position="0 0.07 0.002" width="0.65"></a-text>
+          <a-text id="status-nav" value="NAV: ONLINE" align="center" color="#00ff00" position="0 0.03 0.002" width="0.5"></a-text>
+          <a-text id="status-pwr" value="PWR: 100%" align="center" color="#00ff00" position="0 -0.01 0.002" width="0.5"></a-text>
+          <a-text id="status-sensor" value="SENSOR: READY" align="center" color="#ffaa00" position="0 -0.05 0.002" width="0.5"></a-text>
+          <a-sphere id="indicator-1" radius="0.010" color="#00ff00" position="-0.1 -0.08 0.002"
+                    animation="property: material.opacity; from: 1; to: 0.2; dur: 800; dir: alternate; loop: true"></a-sphere>
+          <a-sphere id="indicator-2" radius="0.010" color="#00ff00" position="0 -0.08 0.002"
+                    animation="property: material.opacity; from: 1; to: 0.2; dur: 1200; dir: alternate; loop: true"></a-sphere>
+          <a-sphere id="indicator-3" radius="0.010" color="#ffaa00" position="0.1 -0.08 0.002"
+                    animation="property: material.opacity; from: 1; to: 0.3; dur: 600; dir: alternate; loop: true"></a-sphere>
+        </a-entity>
+        <a-entity id="hud-top" position="0.35 -0.03 -1" visible="false">
+          <a-plane width="0.28" height="0.12" position="0 0 -0.001"
+                   color="#001133" opacity="0.65" material="shader: flat; side: double; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-plane width="0.28" height="0.002" position="0 0.06 0" color="#FFD700" opacity="0.9" material="shader: flat; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-plane width="0.28" height="0.002" position="0 -0.06 0" color="#FFD700" opacity="0.9" material="shader: flat; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-plane width="0.002" height="0.12" position="-0.14 0 0" color="#FFD700" opacity="0.9" material="shader: flat; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-plane width="0.002" height="0.12" position="0.14 0 0" color="#FFD700" opacity="0.9" material="shader: flat; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-entity id="score-display" position="0 0.025 0.002">
+             <a-text id="score-label" value="SCORE:" align="center" color="#FFD700" position="0 0.015 0.001" width="0.5" letter-spacing="2" font-size="60"></a-text>
+             <a-text id="score-value" value="0" align="center" color="#00FF88" position="0 -0.015 0.001" width="0.5" letter-spacing="3"></a-text>
+          </a-entity>
+          <a-plane width="0.24" height="0.001" position="0 -0.01 0.001" color="#00AAFF" opacity="0.5" material="shader: flat; transparent: true; depthTest: false; depthWrite: false"></a-plane>
+          <a-entity position="0 -0.035 0.002">
+             <a-text value="SECTOR: DEEP SPACE" align="center" color="#00FFFF" position="0 0 0.001" width="0.45"></a-text>
+          </a-entity>
+        </a-entity>
+        <a-entity id="menu-cursor"
+                  cursor="rayOrigin: entity; fuse: true; fuseTimeout: 4000"
+                  raycaster="objects: .button-interactive; far: 2000; interval: 100; lineColor: cyan; lineOpacity: 0.5"
+                  fuse-cursor
+                  position="0 0 -1.5"
+                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                  material="color: white; shader: flat">
+          <a-entity id="cursor-cross-visuals" visible="false">
+            <a-plane width="0.06" height="0.004" color="white" material="shader: flat"></a-plane>
+            <a-plane width="0.004" height="0.06" color="white" material="shader: flat"></a-plane>
+          </a-entity>
+          <a-ring id="fuse-progress-ring"
+                  radius-inner="0.024"
+                  radius-outer="0.029"
+                  theta-start="0"
+                  theta-length="0"
+                  color="#ff0000"
+                  opacity="0.9"
+                  visible="false"
+                  position="0 0 0.001"
+                  material="shader: flat; side: double">
+          </a-ring>
+        </a-entity>
+        <a-entity id="weapon-mount" position="0 -0.55 -0.8">
+            <a-entity id="weapon-blaster" visible="true">
+              <!-- Główny korpus -->
+              <a-box width="0.18" height="0.12" depth="0.5" color="#2a3a4a" position="0 0 0.1"
+                     material="metalness: 0.6; roughness: 0.4"></a-box>
+              <!-- Górna nakładka -->
+              <a-box width="0.20" height="0.06" depth="0.28" color="#1a2a3a" position="0 0.09 0.15"
+                     material="metalness: 0.7; roughness: 0.3"></a-box>
+              <!-- Świecący pasek energii na górze (oddzielny, nie nakłada się) -->
+              <a-cylinder radius="0.012" height="0.22" position="0 0.125 0.15" rotation="90 0 90"
+                          color="#00ffff" material="shader: flat"></a-cylinder>
+              <!-- Podwójne lufy -->
+              <a-cylinder radius="0.03" height="0.6" position="-0.06 0 -0.2" rotation="90 0 0" segments-radial="6"
+                          color="#445566" material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+              <a-cylinder radius="0.03" height="0.6" position="0.06 0 -0.2" rotation="90 0 0" segments-radial="6"
+                          color="#445566" material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+              <!-- Końcówki luf -->
+              <a-cylinder radius="0.035" height="0.05" position="-0.06 0 -0.5" rotation="90 0 0"
+                          color="#111" material="metalness: 0.5"></a-cylinder>
+              <a-cylinder radius="0.035" height="0.05" position="0.06 0 -0.5" rotation="90 0 0"
+                          color="#111" material="metalness: 0.5"></a-cylinder>
+              <!-- Świecące ringi na lufach -->
+                    <a-ring radius-inner="0.02" radius-outer="0.03" position="-0.06 0 -0.53"
+                      color="#00aaff" material="shader: flat; side: double"></a-ring>
+                    <a-ring radius-inner="0.02" radius-outer="0.03" position="0.06 0 -0.53"
+                      color="#00aaff" material="shader: flat; side: double"></a-ring>
+              <a-entity id="flash-blaster" position="0 0 -0.6" visible="false">
+                <a-sphere radius="0.08" color="#00ffff" scale="1.5 1 1"
+                    material="transparent: true; opacity: 0.9; blending: additive"></a-sphere>
+                <a-ring radius-inner="0.05" radius-outer="0.15" rotation="90 0 0" scale="1.5 1 1"
+                  color="#ffffff" material="transparent: true; opacity: 0.6; blending: additive"></a-ring>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-plasma" visible="false">
+                <a-dodecahedron radius="0.08" position="0 0 0.25" color="#550077"
+                        material="metalness: 0.9; roughness: 0.1"></a-dodecahedron>
+              <a-cylinder radius="0.03" height="0.6" position="0 0 -0.1" rotation="90 0 0"
+                      color="#ff33ff" material="opacity: 0.9"></a-cylinder>
+              <a-box width="0.08" height="0.018" depth="0.5" position="0 0.062 -0.1" color="#331144"
+                     material="metalness: 0.7; roughness: 0.3"></a-box>
+              <a-box width="0.08" height="0.018" depth="0.5" position="0 -0.062 -0.1" color="#331144"
+                     material="metalness: 0.7; roughness: 0.3"></a-box>
+              <a-box width="0.02" height="0.08" depth="0.5" position="-0.06 0 -0.1" color="#331144"
+                     material="metalness: 0.7; roughness: 0.3"></a-box>
+              <a-box width="0.02" height="0.08" depth="0.5" position="0.06 0 -0.1" color="#331144"
+                     material="metalness: 0.7; roughness: 0.3"></a-box>
+              <a-torus radius="0.05" radius-tubular="0.008" position="0 0 0.05" rotation="0 0 0" color="#00ffff"></a-torus>
+              <a-torus radius="0.05" radius-tubular="0.008" position="0 0 -0.15" rotation="0 0 0" color="#00ffff"></a-torus>
+              <a-torus radius="0.05" radius-tubular="0.008" position="0 0 -0.35" rotation="0 0 0" color="#00ffff"></a-torus>
+              <a-cone radius-bottom="0.06" radius-top="0.04" height="0.1" position="0 0 -0.45" rotation="90 0 0"
+                      color="#220044" material="metalness: 0.8"></a-cone>
+              <a-ring radius-inner="0.02" radius-outer="0.035" position="0 0 -0.505" color="#ff33ff"></a-ring>
+              <a-entity id="flash-plasma" position="0 0 -0.55" visible="false">
+                <a-sphere radius="0.15" color="#ff33ff"
+                    material="transparent: true; opacity: 0.9; blending: additive"></a-sphere>
+                <a-ring radius-inner="0.1" radius-outer="0.4" rotation="90 0 0"
+                  color="#00ffff" material="transparent: true; opacity: 0.6; blending: additive"></a-ring>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-laser" visible="false">
+              <!-- Główny korpus - elegancki, smukły -->
+              <a-box width="0.1" height="0.08" depth="0.45" color="#1a1a2e" position="0 0 0.15"
+                     material="metalness: 0.9; roughness: 0.2"></a-box>
+              <!-- Górna osłona z wycięciem -->
+              <a-box width="0.12" height="0.03" depth="0.35" color="#16213e" position="0 0.055 0.12"
+                     material="metalness: 0.8; roughness: 0.3"></a-box>
+              <!-- Główna lufa laserowa - długa i precyzyjna -->
+              <a-cylinder radius="0.022" height="0.95" position="0 0 -0.4" rotation="90 0 0"
+                          color="#2d2d44" material="metalness: 0.95; roughness: 0.1"></a-cylinder>
+              <!-- Świecące pierścienie chłodzące na lufie -->
+              <a-torus radius="0.03" radius-tubular="0.004" position="0 0 -0.1" color="#33ff33"
+                       material="shader: flat"></a-torus>
+              <a-torus radius="0.03" radius-tubular="0.004" position="0 0 -0.35" color="#33ff33"
+                       material="shader: flat"></a-torus>
+              <a-torus radius="0.03" radius-tubular="0.004" position="0 0 -0.6" color="#33ff33"
+                       material="shader: flat"></a-torus>
+              <!-- Pasek energii na górze korpusu -->
+              <a-cylinder radius="0.008" height="0.25" position="0 0.075 0.1" rotation="90 0 90"
+                          color="#33ff33" material="shader: flat"></a-cylinder>
+              <!-- Boczne stabilizatory -->
+              <a-box width="0.02" height="0.04" depth="0.2" position="-0.07 0 0" color="#0f3460"
+                     material="metalness: 0.7; roughness: 0.4"></a-box>
+              <a-box width="0.02" height="0.04" depth="0.2" position="0.07 0 0" color="#0f3460"
+                     material="metalness: 0.7; roughness: 0.4"></a-box>
+              <!-- Końcówka lufy - fokuser -->
+              <a-cone radius-bottom="0.028" radius-top="0.015" height="0.08" position="0 0 -0.9" rotation="-90 0 0"
+                      color="#1a1a2e" material="metalness: 0.9; roughness: 0.2"></a-cone>
+                    <a-ring radius-inner="0.008" radius-outer="0.014" position="0 0 -0.94"
+                      color="#33ff33" material="shader: flat; side: double"></a-ring>
+              <!-- Uchwyt/rękojeść -->
+              <a-cylinder radius="0.015" height="0.12" position="0 -0.1 0.25" rotation="20 0 0"
+                          color="#222" material="metalness: 0.5; roughness: 0.6"></a-cylinder>
+              <a-entity id="flash-laser" position="0 0 -0.95" visible="false">
+                <a-cylinder radius="0.012" height="5" rotation="90 0 0" position="0 0 -2.5"
+                          color="#33ff33" material="shader: flat; transparent: true; opacity: 0.85; blending: additive"></a-cylinder>
+                <a-sphere radius="0.03" color="#ffffff"
+                          material="transparent: true; opacity: 0.9; blending: additive"></a-sphere>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-railgun" visible="false">
+              <a-box width="0.16" height="0.14" depth="0.5" color="#505060" position="0 0 0.15"
+                     material="metalness: 0.9; roughness: 0.2"></a-box>
+              <a-box width="0.12" height="0.02" depth="0.4" position="0 0.075 0.15" color="#C0C0C0"
+                     material="metalness: 1.0; roughness: 0.1"></a-box>
+              <a-box width="0.01" height="0.1" depth="0.3" position="-0.085 0 0.15" color="#FFD700"
+                material="metalness: 1.0; roughness: 0.1"></a-box>
+              <a-box width="0.01" height="0.1" depth="0.3" position="0.085 0 0.15" color="#FFD700"
+                material="metalness: 1.0; roughness: 0.1"></a-box>
+              <a-box width="0.03" height="0.06" depth="1.4" position="-0.09 0 -0.5" color="#808080"
+                     material="metalness: 0.8; roughness: 0.3"></a-box>
+              <a-box width="0.03" height="0.06" depth="1.4" position="0.09 0 -0.5" color="#808080"
+                     material="metalness: 0.8; roughness: 0.3"></a-box>
+              <a-box width="0.005" height="0.02" depth="1.3" position="-0.07 0 -0.5" color="#00ffff"
+                     material="shader: flat; opacity: 0.8"></a-box>
+              <a-box width="0.005" height="0.02" depth="1.3" position="0.07 0 -0.5" color="#00ffff"
+                     material="shader: flat; opacity: 0.8"></a-box>
+              <a-torus radius="0.12" radius-tubular="0.005" position="0 0 -0.3" rotation="0 0 0"
+                       color="#00ffff"></a-torus>
+              <a-torus radius="0.12" radius-tubular="0.005" position="0 0 -0.6" rotation="0 0 0"
+                       color="#00ffff"></a-torus>
+              <a-torus radius="0.12" radius-tubular="0.005" position="0 0 -0.9" rotation="0 0 0"
+                       color="#00ffff"></a-torus>
+              <a-cylinder radius="0.05" height="0.8" position="0 0 -0.2" rotation="90 0 0"
+                          color="#0044aa" material="opacity: 0.8; transparent: true"></a-cylinder>
+              <a-cylinder radius="0.02" height="0.8" position="0 0 -0.2" rotation="90 0 0"
+                          color="#ffffff"></a-cylinder>
+              <a-entity position="0 0 -0.5">
+                 <a-ring radius-inner="0.01" radius-outer="0.08" color="#00ffff" material="transparent: true; opacity: 0.5"
+                         animation="property: scale; from: 0.5 0.5 1; to: 1.5 1.5 1; dur: 300; loop: true; dir: alternate"></a-ring>
+              </a-entity>
+              <a-entity id="flash-railgun" position="0 0 -1.3" visible="false">
+                <a-cylinder radius="0.08" height="12" rotation="90 0 0" position="0 0 -6"
+                          color="#00ffff" material="transparent: true; opacity: 0.9; blending: additive"></a-cylinder>
+                <a-sphere radius="0.4" color="#ffffff" material="transparent: true; opacity: 0.8"></a-sphere>
+                <a-ring radius-inner="0.5" radius-outer="1.5" color="#00ffff" material="transparent: true; opacity: 0.6; blending: additive"></a-ring>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-photon" visible="false">
+              <!-- Main Body -->
+              <a-cylinder radius="0.08" height="0.5" rotation="90 0 0" position="0 0 0.1" color="#002233"
+                          material="metalness: 0.9; roughness: 0.1"></a-cylinder>
+              <!-- Energy Core -->
+              <a-sphere radius="0.09" position="0 0 0.1" color="#00ffff"
+                        material="transparent: true; opacity: 0.9; wireframe: true"
+                        animation="property: rotation; to: 360 360 0; loop: true; dur: 3000; easing: linear"></a-sphere>
+              <a-sphere radius="0.06" position="0 0 0.1" color="#ffffff"
+                        material="transparent: true; opacity: 0.8"
+                        animation="property: scale; from: 0.8 0.8 0.8; to: 1.2 1.2 1.2; dir: alternate; loop: true; dur: 500"></a-sphere>
+              <!-- Barrel Structure -->
+              <a-cylinder radius="0.04" height="0.8" rotation="90 0 0" position="0 0 -0.4" color="#004455"
+                          material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+              <!-- Rotating Rings -->
+              <a-entity position="0 0 -0.3">
+                    <a-torus radius="0.12" radius-tubular="0.01" color="#00aaff" material="shader: flat"
+                          animation="property: rotation; to: 0 0 360; loop: true; dur: 2000; easing: linear"></a-torus>
+                    <a-torus radius="0.15" radius-tubular="0.01" color="#00ffff" material="shader: flat"
+                          animation="property: rotation; to: 0 0 -360; loop: true; dur: 3000; easing: linear"></a-torus>
+              </a-entity>
+              <a-entity position="0 0 -0.6">
+                    <a-torus radius="0.08" radius-tubular="0.01" color="#00aaff" material="shader: flat"
+                          animation="property: rotation; to: 0 0 -360; loop: true; dur: 1500; easing: linear"></a-torus>
+              </a-entity>
+              <!-- Stabilizers -->
+              <a-box width="0.02" height="0.02" depth="0.8" position="0.12 0 -0.2" color="#0088aa" material="metalness: 0.4; roughness: 0.5"></a-box>
+              <a-box width="0.02" height="0.02" depth="0.8" position="-0.12 0 -0.2" color="#0088aa" material="metalness: 0.4; roughness: 0.5"></a-box>
+              <a-box width="0.02" height="0.02" depth="0.8" position="0 0.12 -0.2" color="#0088aa" material="metalness: 0.4; roughness: 0.5"></a-box>
+              <a-box width="0.02" height="0.02" depth="0.8" position="0 -0.12 -0.2" color="#0088aa" material="metalness: 0.4; roughness: 0.5"></a-box>
+              <a-entity id="flash-photon" position="0 0 -0.8" visible="false">
+                <a-sphere radius="0.25" color="#00ffff" material="transparent: true; opacity: 0.9"></a-sphere>
+                <a-ring radius-inner="0.1" radius-outer="0.6" color="#ffffff" material="transparent: true; opacity: 0.6"></a-ring>
+                <a-cylinder radius="0.05" height="2" rotation="90 0 0" position="0 0 -1" color="#00ffff" material="opacity: 0.5; transparent: true"></a-cylinder>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-void" visible="false">
+              <a-dodecahedron radius="0.1" position="0 0 0.2" color="#110022"
+                              material="metalness: 0.5; roughness: 0.5"
+                              animation="property: rotation; to: 360 360 0; loop: true; dur: 8000; easing: linear"></a-dodecahedron>
+              <a-cylinder radius="0.02" height="0.8" position="0.05 0 -0.2" rotation="90 0 0" color="#330066"></a-cylinder>
+              <a-cylinder radius="0.02" height="0.8" position="-0.05 0 -0.2" rotation="90 0 0" color="#330066"></a-cylinder>
+              <a-sphere radius="0.05" position="0 0 -0.5" color="#000000" material="opacity: 0.9; transparent: true"
+                        animation="property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dir: alternate; loop: true; dur: 1500"></a-sphere>
+              <a-ring radius-inner="0.06" radius-outer="0.08" position="0 0 -0.5" color="#aa00ff" material="shader: flat"
+                      animation="property: scale; from: 1 1 1; to: 2 2 1; dir: alternate; loop: true; dur: 1000"></a-ring>
+              <a-entity id="flash-void" position="0 0 -0.6" visible="false">
+                <a-sphere radius="0.15" color="#aa00ff" material="transparent: true; opacity: 0.8"></a-sphere>
+                <a-ring radius-inner="0.2" radius-outer="0.6" color="#000000" material="opacity: 0.8; transparent: true"></a-ring>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-omega" visible="false">
+              <!-- Main Body -->
+              <a-box width="0.22" height="0.15" depth="0.6" color="#220000" position="0 -0.05 0.1" material="metalness: 0.8; roughness: 0.3"></a-box>
+              <a-box width="0.24" height="0.05" depth="0.5" color="#440000" position="0 0.05 0.1" material="metalness: 0.7; roughness: 0.3"></a-box>
+              <!-- Rotating Barrel Assembly -->
+              <a-entity position="0 0.05 -0.3" animation="property: rotation; to: 0 0 360; loop: true; dur: 1500; easing: linear">
+                  <!-- Barrels -->
+                  <a-cylinder radius="0.04" height="0.8" position="0.08 0 0" rotation="90 0 0" color="#880000" material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+                  <a-cylinder radius="0.04" height="0.8" position="-0.04 0.07 0" rotation="90 0 0" color="#880000" material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+                  <a-cylinder radius="0.04" height="0.8" position="-0.04 -0.07 0" rotation="90 0 0" color="#880000" material="metalness: 0.8; roughness: 0.2"></a-cylinder>
+                  <!-- Support Rings -->
+                  <a-torus radius="0.12" radius-tubular="0.015" rotation="0 0 0" position="0 0 -0.3" color="#440000" material="metalness: 0.6"></a-torus>
+                  <a-torus radius="0.12" radius-tubular="0.015" rotation="0 0 0" position="0 0 0.3" color="#440000" material="metalness: 0.6"></a-torus>
+              </a-entity>
+              <!-- Energy Core -->
+              <a-cylinder radius="0.03" height="1.0" position="0 0.05 -0.3" rotation="90 0 0" color="#ff0000"
+                          material="transparent: true; opacity: 0.9"
+                          animation="property: material.opacity; from: 0.6; to: 1.0; dir: alternate; loop: true; dur: 100"></a-cylinder>
+              <!-- Side Vents -->
+              <a-box width="0.05" height="0.1" depth="0.4" position="0.15 -0.05 0.1" color="#110000" material="metalness: 0.6; roughness: 0.4"></a-box>
+              <a-box width="0.05" height="0.1" depth="0.4" position="-0.15 -0.05 0.1" color="#110000" material="metalness: 0.6; roughness: 0.4"></a-box>
+              <a-entity id="flash-omega" position="0 0.05 -1.0" visible="false">
+                <a-cylinder radius="0.15" height="6" rotation="90 0 0" position="0 0 -3" color="#ff0000" material="transparent: true; opacity: 0.8"></a-cylinder>
+                <a-sphere radius="0.4" color="#ffaa00" material="transparent: true; opacity: 0.9"></a-sphere>
+                <a-ring radius-inner="0.2" radius-outer="0.8" color="#ff0000" material="transparent: true; opacity: 0.6"></a-ring>
+              </a-entity>
+            </a-entity>
+            <a-entity id="weapon-solar" visible="false">
+              <!-- Main Chassis -->
+              <a-box width="0.12" height="0.15" depth="0.6" position="0 -0.05 0.1" color="#222" material="metalness: 0.8; roughness: 0.3"></a-box>
+              <!-- Solar Collector Wings -->
+              <a-entity position="0.1 0 0.1" rotation="0 0 -30">
+                  <a-box width="0.02" height="0.2" depth="0.5" color="#333"></a-box>
+                  <a-plane width="0.2" height="0.45" position="0.02 0 0" rotation="0 90 0" color="#000" material="shader: flat"></a-plane>
+              </a-entity>
+              <a-entity position="-0.1 0 0.1" rotation="0 0 30">
+                  <a-box width="0.02" height="0.2" depth="0.5" color="#333"></a-box>
+                  <a-plane width="0.2" height="0.45" position="-0.02 0 0" rotation="0 -90 0" color="#000" material="shader: flat"></a-plane>
+              </a-entity>
+              <!-- Central Plasma Core -->
+              <a-cylinder radius="0.03" height="0.8" position="0 0.05 -0.1" rotation="90 0 0"
+                          color="#ffffff" material="transparent: true; opacity: 0.9"
+                          animation="property: material.opacity; from: 0.7; to: 1.0; dir: alternate; loop: true; dur: 100"></a-cylinder>
+              <!-- Rotating Magnetic Field Generators -->
+              <a-entity position="0 0.05 -0.4" animation="property: rotation; to: 0 0 360; loop: true; dur: 1500; easing: linear">
+                  <a-torus radius="0.1" radius-tubular="0.01" color="#ffd700" material="shader: flat"></a-torus>
+                  <a-cone radius-bottom="0.02" height="0.1" position="0 0.1 0" color="#888"></a-cone>
+                  <a-cone radius-bottom="0.02" height="0.1" position="0 -0.1 0" rotation="0 0 180" color="#888"></a-cone>
+                  <a-cone radius-bottom="0.02" height="0.1" position="0.1 0 0" rotation="0 0 -90" color="#888"></a-cone>
+                  <a-cone radius-bottom="0.02" height="0.1" position="-0.1 0 0" rotation="0 0 90" color="#888"></a-cone>
+              </a-entity>
+              <a-entity id="flash-solar" position="0 0.05 -0.8" visible="false">
+                <a-sphere radius="0.4" color="#ffaa00" material="transparent: true; opacity: 0.9"></a-sphere>
+                <a-ring radius-inner="0.2" radius-outer="1.5" color="#ffff00" material="transparent: true; opacity: 0.6; blending: additive"></a-ring>
+                <a-cylinder radius="0.05" height="4" rotation="90 0 0" position="0 0 -2" color="#ffaa00" material="transparent: true; opacity: 0.5"></a-cylinder>
+              </a-entity>
+            </a-entity>
+        </a-entity>
+      </a-camera>
+    </a-entity>
+    </a-entity>
+    <a-entity id="tutorial-panel" position="0 2.5 -3" visible="false">
+      <a-plane width="4.2" height="4.5" color="#001a33" opacity="0.96" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.12" position="0 2.05 0.005" color="#00aaff" opacity="0.5" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.006" position="0 2.01 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.006" position="0 2.11 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-text value="*** QUICK START GUIDE ***" align="center" color="#00ffff" position="0 1.80 0.01" width="3.8" font-size="80"></a-text>
+      <a-text value="Your VR Space Adventure" align="center" color="#00ff88" position="0 1.69 0.01" width="3" font-size="38"></a-text>
+      <a-plane width="4.2" height="0.006" position="0 1.32 0.006" color="#ff6600" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="2.2" position="0 0.40 0.005" color="#0d1b2a" opacity="0.75" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 1.54 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 -0.74 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value=">>> HOW TO PLAY <<<" align="center" color="#00ffff" position="0 1.42 0.01" width="2.8" font-size="60"></a-text>
+      <a-text value="[1] Look Around" align="left" color="#ffdd00" position="-1.70 1.18 0.01" width="2.8" font-size="46"></a-text>
+      <a-text value="Move your head to aim" align="left" color="#ffaa00" position="-1.70 0.98 0.01" width="2.8" font-size="38"></a-text>
+      <a-text value="[2] Scan Asteroids" align="left" color="#00ff88" position="-1.70 0.70 0.01" width="2.8" font-size="46"></a-text>
+      <a-text value="Look at them for 3 seconds" align="left" color="#00dd88" position="-1.70 0.50 0.01" width="2.8" font-size="38"></a-text>
+      <a-text value="[3] Destroy Junk" align="left" color="#ff6600" position="-1.70 0.22 0.01" width="2.8" font-size="46"></a-text>
+      <a-text value="Look at junk to auto-shoot" align="left" color="#ffaa00" position="-1.70 0.02 0.01" width="2.8" font-size="38"></a-text>
+      <a-text value="[4] Survive & Scan" align="left" color="#ff3300" position="-1.70 -0.26 0.01" width="2.8" font-size="46"></a-text>
+      <a-text value="Scans give +3 passes!" align="left" color="#ff6600" position="-1.70 -0.46 0.01" width="2.8" font-size="38"></a-text>
+      <a-text value="[VR] VR CONTROL" align="left" color="#00ffff" position="0.40 1.18 0.01" width="2.6" font-size="46"></a-text>
+      <a-text value="Everything with your head!" align="left" color="#00ddff" position="0.40 0.98 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="No controllers needed" align="left" color="#ffaa00" position="0.40 0.80 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="[♪] AUDIO CUES" align="left" color="#ff99ff" position="0.40 0.50 0.01" width="2.6" font-size="46"></a-text>
+      <a-text value="Beep = Asteroid detected" align="left" color="#ffdd00" position="0.40 0.30 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="Boom = Junk destroyed!" align="left" color="#00ff88" position="0.40 0.12 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="[!] STAY ALERT" align="left" color="#ff0000" position="0.40 -0.18 0.01" width="2.6" font-size="46"></a-text>
+      <a-text value="Don't let junk escape!" align="left" color="#ff6600" position="0.40 -0.38 0.01" width="2.6" font-size="38"></a-text>
+      <a-plane width="4.2" height="0.08" position="0 -2.20 0.005" color="#0088ff" opacity="0.2" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 -2.16 0.006" color="#00ffff" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.68" position="0 -1.25 0.005" color="#1a1a2a" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 -1.01 0.006" color="#ffaa00" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 -1.59 0.006" color="#ffaa00" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value="[⚡] PROGRESSION" align="center" color="#ffaa00" position="0 -1.10 0.01" width="2.8" font-size="42"></a-text>
+      <a-text value="Asteroids spawn every 16 junk destroyed (after 100 destroyed → every 50)" align="center" color="#ffdd00" position="0 -1.28 0.01" width="2.6" font-size="18"></a-text>
+      <a-text value="Rapid fire after 70 junk destroyed!" align="center" color="#ff6600" position="0 -1.46 0.01" width="2.2" font-size="16"></a-text>
+      <a-entity id="skip-tutorial-button" geometry="primitive: plane; width: 2.2; height: 0.45" material="color: #004488"
+                 position="0 -1.95 0.01" class="button-disabled"
+                 animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 800; dir: alternate; loop: true">
+        <a-plane width="2.2" height="0.45" color="#0066cc" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text value="← BACK TO MENU ←" align="center" color="#ffffff" position="0 0 0.002" width="3" font-size="54"></a-text>
+      </a-entity>
+    </a-entity>
+    <a-entity id="menu" position="0 2.1 -3">
+      <a-plane width="4.2" height="6.6" color="#050510" opacity="0.95" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.08" position="0 3.25 0.005" color="#0088ff" opacity="0.2" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 3.29 0.006" color="#00ffff" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.1" position="0 2.15 0.005" color="#0088ff" opacity="0.4" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 2.10 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.005" position="0 2.20 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-entity id="skybox-selection-container" position="-1.1 2.8 0.01">
+        <a-text value="SELECT SKYBOX" align="center" color="#00ffff" position="0 0.25 0" width="2.5" font-size="26"></a-text>
+        <a-entity id="skybox-btn-1" class="button-interactive" position="-0.6 0 0" geometry="primitive: circle; radius: 0.18" material="color: #0044aa; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-ring radius-inner="0.16" radius-outer="0.18" color="#00ffff" position="0 0 0.02"></a-ring>
+          <a-text value="1" align="center" color="#ffffff" width="5" position="0 0 0.03"></a-text>
+          <a-text value="Milky Way" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+        <a-entity id="skybox-btn-2" class="button-interactive" position="0 0 0" geometry="primitive: circle; radius: 0.18" material="color: #0044aa; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-ring radius-inner="0.16" radius-outer="0.18" color="#00ffff" position="0 0 0.02"></a-ring>
+          <a-text value="2" align="center" color="#ffffff" width="5" position="0 0 0.03"></a-text>
+          <a-text value="Deep Space" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+        <a-entity id="skybox-btn-3" class="button-interactive" position="0.6 0 0" geometry="primitive: circle; radius: 0.18" material="color: #0044aa; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-ring radius-inner="0.16" radius-outer="0.18" color="#00ffff" position="0 0 0.02"></a-ring>
+          <a-text value="3" align="center" color="#ffffff" width="5" position="0 0 0.03"></a-text>
+          <a-text value="Nebula" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+      </a-entity>
+      <a-entity position="1.1 2.8 0.01">
+        <a-text value="SELECT CROSSHAIR" align="center" color="#00ffff" position="0 0.25 0" width="2.5" font-size="26"></a-text>
+        <a-entity id="cursor-btn-1" class="button-interactive" position="-0.6 0 0" geometry="primitive: circle; radius: 0.18" material="color: #00aa44; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-ring radius-inner="0.05" radius-outer="0.08" color="#ffffff" material="shader: flat" position="0 0 0.02"></a-ring>
+          <a-text value="Ring" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+        <a-entity id="cursor-btn-2" class="button-interactive" position="0 0 0" geometry="primitive: circle; radius: 0.18" material="color: #0044aa; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-circle radius="0.04" color="#ffffff" material="shader: flat" position="0 0 0.02"></a-circle>
+          <a-text value="Dot" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+        <a-entity id="cursor-btn-3" class="button-interactive" position="0.6 0 0" geometry="primitive: circle; radius: 0.18" material="color: #0044aa; shader: flat"
+                  animation__hover="property: scale; to: 1.1 1.1 1.1; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                  animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+          <a-entity rotation="0 0 45" position="0 0 0.02">
+             <a-plane width="0.1" height="0.02" color="#ffffff" material="shader: flat"></a-plane>
+             <a-plane width="0.02" height="0.1" color="#ffffff" material="shader: flat"></a-plane>
+          </a-entity>
+          <a-text value="Cross" align="center" color="#aaaaaa" width="1.8" position="0 -0.25 0.03"></a-text>
+        </a-entity>
+      </a-entity>
+      <a-plane width="4.2" height="0.4" position="0 1.75 0.005" color="#001a33" opacity="0.8" material="shader: flat"
+               animation="property: material.opacity; from: 0.6; to: 0.9; dur: 2000; dir: alternate; loop: true"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 1.95 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 1.55 0.006" color="#00ffff" opacity="0.9" material="shader: flat"></a-plane>
+      <a-text value="VOYAGER" align="center" color="#00ddff" position="0 1.78 0.009" width="3.2" font-size="95"
+              material="shader: flat; opacity: 0.3"></a-text>
+      <a-text value="VOYAGER" align="center" color="#ffffff" position="0 1.78 0.01" width="3.2" font-size="95"></a-text>
+      <a-text value="VR" align="center" color="#ff6600" position="0 1.68 0.01" width="1.8" font-size="70"
+              animation="property: scale; from: 1 1 1; to: 1.08 1.08 1.08; dur: 1800; dir: alternate; loop: true"></a-text>
+      <a-text value="DEEP SPACE EXPEDITION" align="center" color="#00ff88" position="0 1.42 0.01" width="3.2" font-size="48"></a-text>
+      <a-plane width="4.2" height="0.004" position="0 1.30 0.006" color="#ff6600" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.7" position="0 0.85 0.005" color="#0d1b2a" opacity="0.75" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 1.20 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 0.50 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value="*** CONTROLS ***" align="center" color="#00ffff" position="0 1.08 0.01" width="2.8" font-size="58"></a-text>
+      <a-text value="Move your head to aim" align="center" color="#88ddff" position="0 0.94 0.01" width="2.4" font-size="38"></a-text>
+      <a-text value="Look at objects to scan/lock" align="center" color="#88ddff" position="0 0.80 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="All automatic!" align="center" color="#ffaa00" position="0 0.66 0.01" width="2" font-size="36"></a-text>
+      <a-plane width="4.2" height="0.9" position="0 -0.05 0.005" color="#1a0a0a" opacity="0.75" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 0.40 0.006" color="#ff6600" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 -0.50 0.006" color="#ff6600" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value=">>> OBJECTIVES <<<" align="center" color="#ff6600" position="0 0.28 0.01" width="2.8" font-size="58"></a-text>
+      <a-text value="[+] Scan asteroids (+3 passes)" align="center" color="#00ff88" position="0 0.14 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="[+] Destroy space junk" align="center" color="#ffdd00" position="0 0.00 0.01" width="2.4" font-size="38"></a-text>
+      <a-text value="[+] Survive difficulty rise" align="center" color="#ff3300" position="0 -0.14 0.01" width="2.6" font-size="38"></a-text>
+      <a-text value="[+] Beat high score!" align="center" color="#ff99ff" position="0 -0.28 0.01" width="2.2" font-size="38"></a-text>
+      <a-entity id="start-button" geometry="primitive: plane; width: 2.4; height: 0.55" material="color: #00aa44"
+                 position="0 -0.85 0.01" class="button-interactive"
+                 animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 800; dir: alternate; loop: true">
+        <a-plane width="2.4" height="0.55" color="#00dd66" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text value=">>> START GAME <<<" align="center" color="#000000" position="0 0 0.002" width="3.2" font-size="60"></a-text>
+      </a-entity>
+      <a-entity id="btn-play-campaign" geometry="primitive: plane; width: 2.4; height: 0.55" material="color: #004488"
+                 position="0 -1.55 0.01" class="button-interactive"
+                 animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 800; dir: alternate; loop: true">
+        <a-plane width="2.4" height="0.55" color="#0066cc" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text value="PLAY CAMPAIGN" align="center" color="#ffffff" position="0 0 0.002" width="3.2" font-size="60"></a-text>
+      </a-entity>
+      <a-text value="Play a short campaign" align="center" color="#aaaaaa" position="0 -1.93 0.01" width="3" font-size="30"></a-text>
+      <a-entity id="tutorial-button" geometry="primitive: plane; width: 1.10; height: 0.45" material="color: #ff9900"
+                 position="-0.65 -2.37 0.01" class="button-interactive">
+        <a-plane width="1.10" height="0.45" color="#ffaa00" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text value="[?] TUTORIAL" align="center" color="#000000" position="0 0 0.002" width="1.8" font-size="36"></a-text>
+      </a-entity>
+      <a-entity id="sound-toggle" geometry="primitive: plane; width: 1.10; height: 0.45" material="color: #0066ff"
+                 position="0.65 -2.37 0.01" class="button-interactive">
+        <a-plane width="1.10" height="0.45" color="#0088ff" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text id="sound-toggle-text" value="[ON] SOUND" align="center" color="#ffffff" position="0 0 0.002" width="1.8" font-size="36"></a-text>
+      </a-entity>
+      <a-text value="PROGRESSIVE DIFFICULTY" align="center" color="#00ffaa" position="0 -2.95 0.01" width="3.6" font-size="28"></a-text>
+      <a-text value="by KRIS00657" align="center" color="#0088aa" position="0 -3.10 0.01" width="2" font-size="24"></a-text>
+      <a-plane width="4.2" height="0.08" position="0 -3.25 0.005" color="#0088ff" opacity="0.2" material="shader: flat"></a-plane>
+      <a-plane width="4.2" height="0.004" position="0 -3.21 0.006" color="#00ffff" opacity="0.8" material="shader: flat"></a-plane>
+    </a-entity>
+    <a-entity id="restart-button-rear" position="0 2.5 4" rotation="0 180 0" scale="0.3 0.3 0.3" visible="false">
+      <a-entity class="button-interactive" restart-gaze-button geometry="primitive: circle; radius: 0.4" material="opacity: 0.0; transparent: true">
+        <a-ring radius-inner="0.25" radius-outer="0.3" material="shader: flat; color: #FFFFFF; opacity: 0.9; side: double"></a-ring>
+        <a-entity rotation="0 0 45">
+          <a-plane width="0.1" height="0.4" material="shader: flat; color: #FFFFFF; side: double"></a-plane>
+          <a-plane width="0.4" height="0.1" material="shader: flat; color: #FFFFFF; side: double"></a-plane>
+        </a-entity>
+        <a-ring class="progress-ring" radius-inner="0.25" radius-outer="0.3" theta-start="90" theta-length="0"
+                material="shader: flat; color: #FF0000; opacity: 1.0; side: double" visible="false"></a-ring>
+        <a-text value="RESTART (5s)" align="center" position="0 -0.45 0" width="4" color="#FFFFFF"></a-text>
+      </a-entity>
+    </a-entity>
+    <a-entity id="weapon-selector-panel" position="-4.8 2.5 -2.2" rotation="0 25 0">
+      <a-plane width="4.8" height="4.2" position="0 -0.3 0" color="#050510" opacity="0.9" material="shader: flat; side: double"></a-plane>
+      <a-plane width="4.8" height="4.2" position="0 -0.3 -0.01" color="#001133" opacity="0.5"></a-plane>
+      <a-plane width="4.8" height="0.5" position="0 1.55 0.01" color="#002244" opacity="0.8"></a-plane>
+      <a-text value="SELECT WEAPON" align="center" color="#00ffff" position="0 1.55 0.02" width="4" font-size="60" letter-spacing="2"></a-text>
+      <a-entity id="btn-weapon-1" position="-1.65 0.6 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #004488; opacity: 0.8"
+                weapon-selector="weaponId: weapon-blaster"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#002266"></a-plane>
+        <a-text value="BLASTER" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#00aaff" opacity="0.5"></a-circle>
+        <a-text value="Standard" align="center" position="0 -0.4 0.02" width="2" color="#aaaaaa"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-2" position="-0.55 0.6 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #330033; opacity: 0.8"
+                weapon-selector="weaponId: weapon-plasma"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#220022"></a-plane>
+        <a-text value="PLASMA" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#ff00ff" opacity="0.5"></a-circle>
+        <a-text value="Rapid Fire" align="center" position="0 -0.4 0.02" width="2" color="#aaaaaa"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-3" position="0.55 0.6 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #003300; opacity: 0.8"
+                weapon-selector="weaponId: weapon-laser"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#002200"></a-plane>
+        <a-text value="LASER" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#00ff00" opacity="0.5"></a-circle>
+        <a-text value="Precision" align="center" position="0 -0.4 0.02" width="2" color="#aaaaaa"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-4" position="1.65 0.6 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #443300; opacity: 0.5"
+                weapon-selector="weaponId: weapon-railgun" weapon-lock="requiredScore: 5000"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#332200"></a-plane>
+        <a-text value="RAILGUN" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#ffaa00" opacity="0.5"></a-circle>
+        <a-text id="lock-text-btn-weapon-4" value="LOCKED" align="center" scale="1.2 1.2 1.2" position="0 0 0.02" font-size="30" color="#ff0000" font-weight="bold"></a-text>
+        <a-text value="5000 PTS" align="center" position="0 -0.4 0.02" width="2" color="#ffaa00"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-5" position="-1.65 -0.7 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #004444; opacity: 0.5"
+                weapon-selector="weaponId: weapon-photon" weapon-lock="requiredScore: 8000"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#002222"></a-plane>
+        <a-text value="PHOTON" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#00ffff" opacity="0.5"></a-circle>
+        <a-text id="lock-text-btn-weapon-5" value="LOCKED" align="center" scale="1.2 1.2 1.2" position="0 0 0.02" font-size="30" color="#ff0000" font-weight="bold"></a-text>
+        <a-text value="8000 PTS" align="center" position="0 -0.4 0.02" width="2" color="#ffaa00"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-6" position="-0.55 -0.7 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #220044; opacity: 0.5"
+                weapon-selector="weaponId: weapon-void" weapon-lock="requiredScore: 10000"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#110022"></a-plane>
+        <a-text value="VOID" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#aa00ff" opacity="0.5"></a-circle>
+        <a-text id="lock-text-btn-weapon-6" value="LOCKED" align="center" scale="1.2 1.2 1.2" position="0 0 0.02" font-size="30" color="#ff0000" font-weight="bold"></a-text>
+        <a-text value="10000 PTS" align="center" position="0 -0.4 0.02" width="2" color="#ffaa00"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-7" position="0.55 -0.7 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #440000; opacity: 0.5"
+                weapon-selector="weaponId: weapon-omega" weapon-lock="requiredScore: 12000"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#220000"></a-plane>
+        <a-text value="OMEGA" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#ff0000" opacity="0.5"></a-circle>
+        <a-text id="lock-text-btn-weapon-7" value="LOCKED" align="center" scale="1.2 1.2 1.2" position="0 0 0.02" font-size="30" color="#ff0000" font-weight="bold"></a-text>
+        <a-text value="12000 PTS" align="center" position="0 -0.4 0.02" width="2" color="#ffaa00"></a-text>
+      </a-entity>
+      <a-entity id="btn-weapon-8" position="1.65 -0.7 0.02" class="button-interactive"
+                geometry="primitive: plane; width: 0.95; height: 1.2" material="color: #442200; opacity: 0.5"
+                weapon-selector="weaponId: weapon-solar" weapon-lock="requiredScore: 15000"
+                animation__hover="property: scale; to: 1.05 1.05 1.05; dur: 150; startEvents: mouseenter; pauseEvents: mouseleave"
+                animation__leave="property: scale; to: 1 1 1; dur: 150; startEvents: mouseleave">
+        <a-plane width="0.95" height="0.3" position="0 0.45 0.01" color="#221100"></a-plane>
+        <a-text value="SOLAR" align="center" position="0 0.45 0.02" width="2.5" color="#ffffff"></a-text>
+        <a-circle radius="0.2" position="0 0 0.01" color="#ff8800" opacity="0.5"></a-circle>
+        <a-text id="lock-text-btn-weapon-8" value="LOCKED" align="center" scale="1.2 1.2 1.2" position="0 0 0.02" font-size="30" color="#ff0000" font-weight="bold"></a-text>
+        <a-text value="15000 PTS" align="center" position="0 -0.4 0.02" width="2" color="#ffaa00"></a-text>
+      </a-entity>
+      <a-text id="weapon-unlock-info" value="Unlock more weapons by earning points!" align="center" color="#ffaa00" position="0 -1.6 0.02" width="3" font-size="35"></a-text>
+      <a-text value="Log in at HeyVR.io to UNLOCK & SAVE WEAPONS" align="center" color="#aaaaaa" position="0 -1.9 0.02" width="3.8" font-size="28"></a-text>
+      <a-text value="Weapons 5000+ PTS = Faster Shooting" align="center" color="#44ff44" position="0 -2.15 0.02" width="3.5" font-size="26"></a-text>
+    </a-entity>
+    <a-entity id="leaderboard-panel" position="3.8 2.5 -2.5" rotation="0 -20 0" leaderboard-system="leaderboardId: punkty">
+      <a-plane width="3" height="4.5" color="#050510" opacity="0.9" material="shader: flat"></a-plane>
+      <a-plane width="3" height="4.5" position="0 0 -0.01" color="#001133" opacity="0.5"></a-plane>
+      <a-plane width="3" height="0.6" position="0 1.95 0.01" color="#002244" opacity="0.8"></a-plane>
+      <a-text value="TOP COMMANDERS" align="center" color="#ffdd00" position="0 1.95 0.02" width="4" font-size="60"></a-text>
+      <a-text value="RANK" align="left" color="#888888" position="-1.2 1.45 0.02" width="2.5"></a-text>
+      <a-text value="PILOT" align="left" color="#888888" position="-0.8 1.45 0.02" width="2.5"></a-text>
+      <a-text value="SCORE" align="right" color="#888888" position="1.2 1.45 0.02" width="2.5"></a-text>
+      <a-plane width="2.6" height="0.005" position="0 1.35 0.02" color="#444444"></a-plane>
+      <a-entity class="scores-container" position="0 0.25 0.02"></a-entity>
+      <a-entity class="user-score-container" position="0 -1.8 0.02"></a-entity>
+    </a-entity>
+    <a-entity id="game-over-panel" position="0 2.5 -3" visible="false">
+      <a-plane width="4.5" height="4.6" color="#0a0000" opacity="0.98" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.15" position="0 2.225 0.005" color="#ff0000" opacity="0.5" material="shader: flat"
+               animation="property: material.opacity; from: 0.3; to: 0.7; dur: 600; dir: alternate; loop: true"></a-plane>
+      <a-plane width="4.5" height="0.008" position="0 2.155 0.006" color="#ff3300" opacity="1" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.008" position="0 2.295 0.006" color="#ff3300" opacity="1" material="shader: flat"></a-plane>
+      <a-text value="!!! GAME OVER !!!" align="center" color="#ff0000" position="0 1.90 0.01" width="4.8" font-size="130"
+              animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 800; dir: alternate; loop: true"></a-text>
+      <a-text value="MISSION FAILED" align="center" color="#ff6600" position="0 1.60 0.01" width="3.6" font-size="65"></a-text>
+      <a-plane width="4.5" height="0.006" position="0 1.45 0.006" color="#ff3300" opacity="0.9" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.6" position="0 1.05 0.005" color="#0a0a0a" opacity="0.85" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.005" position="0 1.35 0.006" color="#ff6600" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.005" position="0 0.75 0.006" color="#ff6600" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value="SPACE JUNK ESCAPED" align="center" color="#ff6600" position="0 1.20 0.01" width="3.4" font-size="54"></a-text>
+      <a-text value="Not enough passes left" align="center" color="#ffaa00" position="0 1.05 0.01" width="3" font-size="42"></a-text>
+      <a-text value="Scan asteroids to earn more!" align="center" color="#ffdd00" position="0 0.90 0.01" width="3.2" font-size="42"></a-text>
+      <a-plane width="4.5" height="1.2" position="0 0.05 0.005" color="#001a00" opacity="0.8" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.006" position="0 0.65 0.006" color="#00ff00" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.006" position="0 -0.55 0.006" color="#00ff00" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value="📊 SESSION STATISTICS" align="center" color="#00ff00" position="0 0.50 0.01" width="3.2" font-size="64"></a-text>
+      <a-text value="Asteroids Scanned:" align="left" color="#ffdd00" position="-1.85 0.25 0.01" width="2.4" font-size="46"></a-text>
+      <a-text id="final-scans" value="0" align="right" color="#00ff88" position="1.85 0.25 0.01" width="1.2" font-size="75"></a-text>
+      <a-text value="Junk Destroyed:" align="left" color="#ff9900" position="-1.85 0.0 0.01" width="2.4" font-size="46"></a-text>
+      <a-text id="final-junk" value="0" align="right" color="#ffaa00" position="1.85 0.0 0.01" width="1.2" font-size="75"></a-text>
+      <a-text value="Time Survived:" align="left" color="#00aaff" position="-1.85 -0.25 0.01" width="2.4" font-size="46"></a-text>
+      <a-text id="final-time" value="0:00" align="right" color="#00ddff" position="1.85 -0.25 0.01" width="1.2" font-size="75"></a-text>
+      <a-plane width="4.5" height="0.5" position="0 -0.75 0.005" color="#0a0a1a" opacity="0.85" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.005" position="0 -0.50 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.005" position="0 -1.00 0.006" color="#00ffff" opacity="0.7" material="shader: flat"></a-plane>
+      <a-text value="RESTARTING IN..." align="center" color="#00ffff" position="0 -0.65 0.01" width="2.6" font-size="52"></a-text>
+      <a-text id="restart-countdown" value="35 seconds" align="center" color="#88ccff" position="0 -0.85 0.01" width="2.4" font-size="62"
+              animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1000; dir: alternate; loop: true"></a-text>
+      <a-entity id="back-to-menu-button" geometry="primitive: plane; width: 2.2; height: 0.4" material="color: #004488"
+                 position="0 -1.30 0.01" class="button-disabled"
+                 animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 800; dir: alternate; loop: true">
+        <a-plane width="2.2" height="0.4" color="#0066cc" opacity="0.9" material="shader: flat"></a-plane>
+        <a-text value="← BACK TO MENU ←" align="center" color="#ffffff" position="0 0 0.002" width="2.6" font-size="48"></a-text>
+      </a-entity>
+      <a-plane width="4.2" height="0.003" position="0 -1.57 0.006" color="#00ff88" opacity="0.8" material="shader: flat"></a-plane>
+      <a-text value="🏆 TOTAL SCORE:" align="center" color="#ffdd00" position="0 -1.72 0.01" width="2.6" font-size="55"
+              animation="property: material.opacity; from: 0.8; to: 1.0; dur: 500; dir: alternate; loop: true"></a-text>
+      <a-text id="final-total-score" value="0" align="center" color="#00ff88" position="0 -1.95 0.01" width="2" font-size="90"
+              animation="property: scale; from: 1 1 1; to: 1.08 1.08 1.08; dur: 700; dir: alternate; loop: true"></a-text>
+      <a-plane width="4.2" height="0.003" position="0 -2.12 0.006" color="#ff6600" opacity="0.6" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.10" position="0 -2.35 0.005" color="#ff0000" opacity="0.2" material="shader: flat"></a-plane>
+      <a-plane width="4.5" height="0.005" position="0 -2.30 0.006" color="#ff3300" opacity="0.8" material="shader: flat"></a-plane>
+      <a-text value="Try again! " align="center" color="#ff8888" position="0 -2.23 0.01" width="2.4" font-size="28"></a-text>
+    </a-entity>
+    <audio id="background-audio" loop preload="auto" onerror="dbgWarn('Background audio failed to load')">
+      <source src="assets/sounds/1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="menu-audio" loop preload="auto" onerror="dbgWarn('Menu audio failed to load')">
+      <source src="assets/sounds/menu.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="shot-audio" preload="auto" onerror="dbgWarn('Shot audio failed to load')">
+      <source src="assets/sounds/shot.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="shot-audio-plasma" preload="auto" onerror="dbgWarn('Shot audio plasma failed to load')">
+      <source src="assets/sounds/shot2.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="shot-audio-blaster" preload="auto" onerror="dbgWarn('Shot audio blaster failed to load')">
+      <source src="assets/sounds/shot3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="shot-audio-railgun" preload="auto" onerror="dbgWarn('Shot audio railgun failed to load')">
+      <source src="assets/sounds/shot4.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="scanner-audio" preload="auto" onerror="dbgWarn('Scanner audio failed to load')">
+      <source src="assets/sounds/scanner.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-1" preload="auto" onerror="dbgWarn('Explosion audio 1 failed to load')">
+      <source src="assets/sounds/wybuch.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-2" preload="auto" onerror="dbgWarn('Explosion audio 2 failed to load')">
+      <source src="assets/sounds/wybuch2.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-3" preload="auto" onerror="dbgWarn('Explosion audio 3 failed to load')">
+      <source src="assets/sounds/wybuch3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-4" preload="auto" onerror="dbgWarn('Explosion audio 4 failed to load')">
+      <source src="assets/sounds/wybuch4.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-5" preload="auto" onerror="dbgWarn('Explosion audio 5 failed to load')">
+      <source src="assets/sounds/wybuch5.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-6" preload="auto" onerror="dbgWarn('Explosion audio 6 failed to load')">
+      <source src="assets/sounds/wybuch6.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-7" preload="auto" onerror="dbgWarn('Explosion audio 7 failed to load')">
+      <source src="assets/sounds/wybuch7.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-8" preload="auto" onerror="dbgWarn('Explosion audio 8 failed to load')">
+      <source src="assets/sounds/wybuch8.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-9" preload="auto" onerror="dbgWarn('Explosion audio 9 failed to load')">
+      <source src="assets/sounds/wybuch9.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-10" preload="auto" onerror="dbgWarn('Explosion audio 10 failed to load')">
+      <source src="assets/sounds/wybuch10.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-11" preload="auto" onerror="dbgWarn('Explosion audio 11 failed to load')">
+      <source src="assets/sounds/wybuch11.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-12" preload="auto" onerror="dbgWarn('Explosion audio 12 failed to load')">
+      <source src="assets/sounds/wybuch12.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-13" preload="auto" onerror="dbgWarn('Explosion audio 13 failed to load')">
+      <source src="assets/sounds/wybuch13.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-14" preload="auto" onerror="dbgWarn('Explosion audio 14 failed to load')">
+      <source src="assets/sounds/wybuch14.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-15" preload="auto" onerror="dbgWarn('Explosion audio 15 failed to load')">
+      <source src="assets/sounds/wybuch15.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-16" preload="auto" onerror="dbgWarn('Explosion audio 16 failed to load')">
+      <source src="assets/sounds/wybuch16.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-17" preload="auto" onerror="dbgWarn('Explosion audio 17 failed to load')">
+      <source src="assets/sounds/wybuch17.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosion-audio-18" preload="auto" onerror="dbgWarn('Explosion audio 18 failed to load')">
+      <source src="assets/sounds/wybuch18.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="scan-complete-audio" preload="auto" onerror="dbgWarn('Scan complete audio failed to load')">
+      <source src="assets/sounds/scancom.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="load-audio" preload="auto" onerror="dbgWarn('Load audio failed to load')">
+      <source src="assets/sounds/load.mp3" type="audio/mpeg">
+    </audio>
+  </a-scene>
+  <div id="ad-overlay" style="position: fixed; bottom: 100px; right: 20px; z-index: 99999; background: rgba(0, 0, 0, 0.8); border: 2px solid #00ffff; padding: 10px; border-radius: 10px; text-align: center; display: block;">
+    <div style="position: relative; width: 300px; height: 169px;">
+        <button id="ad-close-btn" style="position: absolute; top: -25px; right: -25px; background: red; color: white; border: 2px solid white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; z-index: 100000;">X</button>
+        <div style="color: #ffdd00; font-family: sans-serif; font-size: 12px; margin-bottom: 5px; font-weight: bold; position: absolute; top: -30px; left: 0; width: 100%;">Advertisement - Support Dev</div>
+        <div id="ad-content-placeholder" style="width: 300px; height: 169px; overflow: hidden; position: relative; background: #000;">
+            <div style="transform: scale(0.375); transform-origin: top left; width: 800px; height: 450px;">
+                <heyvr-ad
+                    adUnit="kris00657_3"
+                    width="800px"
+                    height="450px"
+                    format="video">
+                </heyvr-ad>
+            </div>
+        </div>
+    </div>
+  </div>
+    <script src="js/app/ad-overlay.js"></script>
+    <script>
+      const isVR = AFRAME && AFRAME.utils && AFRAME.utils.device && (AFRAME.utils.device.isMobileVR() || navigator.userAgent.includes('Oculus') || navigator.userAgent.includes('Quest'));
+      const starsEl = document.getElementById('stars');
+      if (starsEl) {
+        if (isVR) {
+          starsEl.setAttribute('star-system', 'numStars: 50; size: 4000');
+        } else {
+          starsEl.setAttribute('star-system', 'numStars: 800; size: 6000');
+        }
+      }
+      const camera = document.querySelector('a-camera');
+      if (camera) {
+        if (isVR) {
+          camera.setAttribute('fov', '90');
+        } else {
+          camera.setAttribute('fov', '75');
+        }
+      }
+    </script>
+</body>
+</html>
