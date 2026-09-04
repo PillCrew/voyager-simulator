@@ -1154,7 +1154,7 @@
                             if (audio2) {
                                 audio2.currentTime = 0;
                                 audio2.volume = 0.6;
-                                const flashSound = new Audio('assets/sounds/blysk.mp3');
+                                const flashSound = new Audio('assets/sounds/flash.mp3');
                                 flashSound.volume = 0.8;
                                 flashSound.play().catch(e => {});
                                 audio2.onended = () => {
